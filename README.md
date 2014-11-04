@@ -1,2 +1,2 @@
-pervasiveComputingProject
-=========================
+SHAMrOCk - Sphero HAnd MOtion Control
+=====================================
