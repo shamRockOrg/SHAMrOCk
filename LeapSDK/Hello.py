@@ -9,6 +9,7 @@
 ################################################################################
 
 import Leap, sys, thread, time
+import spheroDriver, bluetooth
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
 
@@ -20,8 +21,23 @@ class SampleListener(Leap.Listener):
     average = 0
     i = 0
 
+
+
     def on_init(self, controller):
         print "Initialized"
+        self.s = spheroDriver.Sphero()
+        try:
+            self.s.connect()
+        except IOError:
+            self.s.disconnect()
+
+            try:
+                self.s.connect()
+            except bluetooth.btcommon.BluetoothError as error:
+                sys.stdout.write(error)
+                sys.stdout.flush()
+                time.sleep(5.0)
+                sys.exit(1)
 
     def on_connect(self, controller):
         print "Connected"
@@ -58,6 +74,11 @@ class SampleListener(Leap.Listener):
                     print "------i %d" % (self.i)
                     self.myList[self.i] = hand.palm_position[1]
                     self.i = self.i+1
+                    if (self.average>100 and self.average<200):
+                        self.s.roll(100, 100, 1, False)
+                    else:
+                        self.s.roll(100, 100, 0, False)
+
 
                     if (self.i == 5):
                         self.i = 0;
@@ -169,6 +190,7 @@ def main():
 
     # Have the sample listener receive events from the controller
     controller.add_listener(listener)
+    
 
     # Keep this process running until Enter is pressed
     print "Press Enter to quit..."
