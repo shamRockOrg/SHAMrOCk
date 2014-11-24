@@ -173,7 +173,7 @@ class BTInterface(object):
 		sys.stdout.write("Searching for devices....")
 		sys.stdout.flush()
 
-		for i in range(10):
+		for i in range(3):
 			sys.stdout.write("....")
 			sys.stdout.flush()
 			nearby_devices = bluetooth.discover_devices(lookup_names = True)
@@ -201,7 +201,7 @@ class BTInterface(object):
 			self.sock=bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 			self.sock.connect((bdaddr,self.port))
 		except bluetooth.btcommon.BluetoothError as error:
-			sys.stdout.write(error)
+			sys.stdout.write("Bluetooth error:"+error)
 			sys.stdout.flush()
 			time.sleep(5.0)
 			sys.exit(1)
@@ -231,6 +231,7 @@ class Sphero(threading.Thread):
 		self.stream_mask2 = None
 		self.seq = 0
 		self.raw_data_buf = []
+		self.bufcopy = []
 		self._communication_lock = threading.Lock()
 		self._async_callback_dict = dict()
 		self._sync_callback_dict = dict()
@@ -284,7 +285,7 @@ class Sphero(threading.Thread):
 	def clamp(self, n, minn, maxn):
 		return max(min(maxn, n), minn)
 		
-	def ping(self, response):
+	def ping(self, response=True):
 		"""
 		The Ping command is used to verify both a solid data link with the
 		Client and that Sphero is awake and dispatching commands.
@@ -293,7 +294,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_PING'],[]), response)
 
-	def get_version(self, response):
+	def get_version(self, response=True):
 		"""
 		The Get Versioning command returns a whole slew of software and
 		hardware information.
@@ -302,7 +303,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_VERSION'],[]), response)
 
-	def set_device_name(self, name, response):
+	def set_device_name(self, name, response=True):
 		"""
 		This assigned name is held internally and produced as part of the
 		Get Bluetooth Info service below. Names are clipped at 48
@@ -315,7 +316,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_BT_NAME'],[name]), response)
 
-	def get_bt_name(self, response):
+	def get_bt_name(self, response=True):
 		"""
 		This returns the textual name (in ASCII) that the Bluetooth module
 		advertises. It also returns the BTA Bluetooth Address or MAC ID
@@ -327,7 +328,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_GET_BT_NAME'],[]), response)
 
-	def set_auto_reconnect(self, enable, time, response):
+	def set_auto_reconnect(self, enable, time, response=True):
 		"""
 		This configures the control of the Bluetooth module in its attempt
 		to automatically reconnect with the last iPhone device. This is a
@@ -345,7 +346,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_AUTO_RECONNECT'],[enable,time]), response)
 
-	def get_auto_reconnect(self, response):
+	def get_auto_reconnect(self, response=True):
 		"""
 		This returns the Bluetooth auto reconnect values as defined in the
 		Set Auto Reconnect command.
@@ -354,7 +355,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_GET_AUTO_RECONNECT'],[]), reponse)
 
-	def get_power_state(self, response):
+	def get_power_state(self, response=True):
 		"""
 		This returns the current power state and some additional
 		parameters to the Client.
@@ -363,7 +364,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_GET_PWR_STATE'],[]), response)
 
-	def set_power_notify(self, enable, response):
+	def set_power_notify(self, enable, response=True):
 		"""
 		This enables Sphero to asynchronously notify the Client
 		periodically with the power state or immediately when the power
@@ -376,7 +377,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_PWR_NOTIFY'],[enable]), response)
 
-	def go_to_sleep(self, time, macro, response):
+	def go_to_sleep(self, time, macro, response=True):
 		"""
 		This puts Sphero to sleep immediately with two parameters: the
 		first is the number of seconds after which it will automatically
@@ -390,7 +391,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SLEEP'],[(time>>8), (time & 0xff), macro]), response)
 
-	def run_l1_diags(self, response):
+	def run_l1_diags(self, response=True):
 		"""
 		This is a developer-level command to help diagnose aberrant
 		behavior. Most system counters, process flags, and system states
@@ -402,7 +403,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_RUN_L1_DIAGS'],[]), response)
 
-	def run_l2_diags(self, response):
+	def run_l2_diags(self, response=True):
 		"""
 		This is a developers-only command to help diagnose aberrant
 		behavior. It is much less impactful than the Level 1 command as it
@@ -413,7 +414,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_RUN_L2_DIAGS'],[]), response)
 
-	def clear_counters(self, response):
+	def clear_counters(self, response=True):
 		"""
 		This is a developers-only command to clear the various system
 		counters described in the level 2 diag.
@@ -422,7 +423,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_CLEAR_COUNTERS'],[]), response)
 
-	def assign_counter_value(self, counter, response):
+	def assign_counter_value(self, counter, response=True):
 		"""
 		Sphero contains a 32-bit counter that increments every millisecond
 		when it's not in the Idle state. It has no absolute meaning and is
@@ -434,7 +435,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_ASSIGN_COUNTER'],[((counter>>24) & 0xff), ((counter>>16) & 0xff), ((counter>>8) & 0xff) ,(counter & 0xff)]), response)
 
-	def poll_packet_times(self, time, response):
+	def poll_packet_times(self, time, response=True):
 		"""
 		This command helps the Client application profile the transmission
 		and processing latencies in Sphero so that a relative
@@ -465,7 +466,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_POLL_TIME'],[((time>>24) & 0xff), ((time>>16) & 0xff), ((time>>8) & 0xff), (time & 0xff)]), response)
 
-	def set_heading(self, heading, response):
+	def set_heading(self, heading, response=True):
 		"""
 		This allows the client to adjust the orientation of Sphero by
 		commanding a new reference heading in degrees, which ranges from 0
@@ -478,7 +479,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_HEADING'],[(heading>>8),(heading & 0xff)]), response)
 
-	def set_stablization(self, enable, response):
+	def set_stabilisation(self, enable, response=True):
 		"""
 		This turns on or off the internal stabilization of Sphero, in
 		which the IMU is used to match the ball's orientation to its
@@ -490,7 +491,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_STABILIZ'],[enable]), response)
 
-	def set_rotation_rate(self, rate, response):
+	def set_rotation_rate(self, rate, response=True):
 		"""
 		This allows you to control the rotation rate that Sphero will use
 		to meet new heading commands. The commanded value is in units of
@@ -505,7 +506,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_ROTATION_RATE'],[self.clamp(rate, 0, 255)]), response)
 
-	def set_app_config_blk(self, app_data, response):
+	def set_app_config_blk(self, app_data, response=True):
 		"""
 		This allows you to write a 32 byte block of data from the
 		configuration block that is set aside for exclusive use by
@@ -516,7 +517,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_APP_CONFIG_BLK'],[((app_data>>24) & 0xff), ((app_data>>16) & 0xff), ((app_data>>8) & 0xff), (app_data & 0xff)]), response)
 
-	def get_app_config_blk(self, response):
+	def get_app_config_blk(self, response=True):
 		"""
 		This allows you to retrieve the application configuration block\
 		that is set aside for exclusive use by applications.
@@ -524,7 +525,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_GET_APP_CONFIG_BLK'], []), response)
 
-	def set_data_strm(self, sample_div, sample_frames, sample_mask1, pcnt, sample_mask2, response):
+	def set_data_strm(self, sample_div, sample_frames, sample_mask1, pcnt, sample_mask2, response=True):
 		"""
 		Currently the control system runs at 400Hz and because it's pretty
 		unlikely you will want to see data at that rate, N allows you to
@@ -552,10 +553,10 @@ class Sphero(threading.Thread):
 		self.create_mask_list(sample_mask1, sample_mask2)
 		self.stream_mask1 = sample_mask1
 		self.stream_mask2 = sample_mask2
-		print data
+		print "(555)data:", data
 		self.send(data, response)
 
-	def set_filtered_data_strm(self, sample_div, sample_frames, pcnt, response):
+	def set_filtered_data_strm(self, sample_div, sample_frames, pcnt, response=True):
 		"""
 		Helper function to add all the filtered data to the data strm
 		mask, so that the user doesn't have to set the data strm manually.
@@ -574,7 +575,7 @@ class Sphero(threading.Thread):
 				mask2 = mask2|value
 		self.set_data_strm(sample_div, sample_frames, mask1, pcnt, mask2, response)
 
-	def set_raw_data_strm(self, sample_div, sample_frames, pcnt, response):
+	def set_raw_data_strm(self, sample_div, sample_frames, pcnt, response=True):
 		"""
 		Helper function to add all the raw data to the data strm mask, so
 		that the user doesn't have to set the data strm manually.
@@ -594,7 +595,7 @@ class Sphero(threading.Thread):
 		self.set_data_strm(sample_div, sample_frames, mask1, pcnt, mask2, response)
 
 
-	def set_all_data_strm(self, sample_div, sample_frames, pcnt, response):
+	def set_all_data_strm(self, sample_div, sample_frames, pcnt, response=True):
 		"""
 		Helper function to add all the data to the data strm mask, so
 		that the user doesn't have to set the data strm manually.
@@ -612,7 +613,7 @@ class Sphero(threading.Thread):
 				mask2 = mask2|value
 		self.set_data_strm(sample_div, sample_frames, mask1, pcnt, mask2, response)
 
-	def config_collision_detect(self, method, Xt, Xspd, Yt, Yspd, ignore_time, response):
+	def config_collision_detect(self, method, Xt, Xspd, Yt, Yspd, ignore_time, response=True):
 		"""
 		This command either enables or disables asynchronous message
 		generation when a collision is detected.The Ignore Time parameter
@@ -634,7 +635,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_CFG_COL_DET'],[method, Xt, Xspd, Yt, Yspd, ignore_time]), response)
 
-	def set_rgb_led(self, red, green, blue, save, response):
+	def set_rgb_led(self, red, green, blue, save, response=True):
 		"""
 		This allows you to set the RGB LED color. The composite value is
 		stored as the "application LED color" and immediately driven to
@@ -650,7 +651,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_RGB_LED'],[self.clamp(red,0,255), self.clamp(green,0,255), self.clamp(blue,0,255), save]), response)
 
-	def set_back_led(self, brightness, response):
+	def set_back_led(self, brightness, response=True):
 		"""
 		This allows you to control the brightness of the back LED. The
 		value does not persist across power cycles.
@@ -660,7 +661,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_BACK_LED'],[self.clamp(brightness,0,255)]), response)
 
-	def get_rgb_led(self, response):
+	def get_rgb_led(self, response=True):
 		"""
 		This retrieves the "user LED color" which is stored in the config
 		block (which may or may not be actively driven to the RGB LED).
@@ -669,7 +670,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_GET_RGB_LED'],[]), response)
 
-	def roll(self, speed, heading, state, response):
+	def roll(self, speed, heading, state, response=True):
 		"""
 		This commands Sphero to roll along the provided vector. Both a
 		speed and a heading are required; the latter is considered
@@ -686,7 +687,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_ROLL'],[self.clamp(speed,0,255), (heading>>8), (heading & 0xff), state]), response)
 
-	def boost(self, time, heading, response):
+	def boost(self, time, heading, response=True):
 		"""
 		This commands Sphero to meet the provided heading, disable
 		stabilization and ramp the motors up to full-speed for a period of
@@ -700,7 +701,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_BOOST'], [time, (heading>>8), (heading & 0xff)]), response)
 
-	def set_raw_motor_values(self, l_mode, l_power, r_mode, r_power, response):
+	def set_raw_motor_values(self, l_mode, l_power, r_mode, r_power, response=True):
 		"""
 		This allows you to take over one or both of the motor output
 		values, instead of having the stabilization system control
@@ -715,7 +716,7 @@ class Sphero(threading.Thread):
 		"""
 		self.send(self.pack_cmd(REQ['CMD_SET_RAW_MOTORS'], [l_mode, l_power, r_mode, r_power]), response)
 
-	def send(self, data, response):
+	def send(self, data, response=True):
 		"""
 		Packets are sent from Client -> Sphero in the following byte format::
 
@@ -805,10 +806,11 @@ class Sphero(threading.Thread):
 			with self._communication_lock:
 				self.raw_data_buf += self.bt.recv(num_bytes)
 			data = self.raw_data_buf
+			self.bufcopy = self.raw_data_buf
 			while len(data)>5:
 				prettyprint(data)
 				if data[:2] == RECV['SYNC']:
-					# print "got response packet"
+					print "SYNC"
 					# response packet
 					data_length = ord(data[4])
 					if data_length+5 <= len(data):
@@ -819,6 +821,7 @@ class Sphero(threading.Thread):
 						break
 				 
 				elif data[:2] == RECV['ASYNC']:
+					print "ASYNC"
 					data_length = (ord(data[3])<<8)+ord(data[4])
 					if data_length+5 <= len(data):
 						data_packet = data[:(5+data_length)]
@@ -835,7 +838,13 @@ class Sphero(threading.Thread):
 					else:
 						print "got a packet that isn't streaming"
 				else:
-					raise RuntimeError("Bad SOF : " + self.data2hexstr(data))
+					if data[1:3] == RECV['SYNC'] or data[1:3] == RECV['ASYNC']:
+						# This is a Sphero 2.0. Remove carriage return.
+						data = data[1:]
+					else:
+						raise RuntimeError("Bad SOF : " + self.data2hexstr(data))
+			if len(data) > 0:
+				print "Raw data:", data
 			self.raw_data_buf=data
 
 	def parse_pwr_notify(self, data, data_length):
@@ -890,8 +899,8 @@ class Sphero(threading.Thread):
 		for i in range((data_length-1)/2):
 			unpack = struct.unpack_from('>h', ''.join(data[5+2*i:]))
 			output[self.mask_list[i]] = unpack[0]
-		print self.mask_list
-		print output
+		print "Mask list: " +self.mask_list
+		print "output:" +output
 		return output
 
 
@@ -905,4 +914,5 @@ class Sphero(threading.Thread):
 def prettyprint(thing):
 	length = ord(thing[4])
 	data = thing[5:length+5]
-	print "Got:" ''.join(data)
+	count = ord(data[-1])
+	print "%d - %s" % (count,''.join(data[:-1]))
