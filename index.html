@@ -68,13 +68,19 @@
                 </a>Starting our project!</h3>
             
             <p>
-                First of all, we calc an avarage position of our hand when we were using LeapMotion so the control would be smoother
-                Every 5 frames we get the average value of our hands position
+                First of all, we calc an average position of our hand when we were using LeapMotion so the control would be smoother.
+                Every 5 frames we get the average value of our hands position.
             </p>
             
-            <p>Non blocking receiving data from sphero</p>
+            <p>
+                Then we focus on the "non-official" Sphero driver in order to receive data; We have to modified to non blocking.
+                Because it used to block when we receive the first message. 
+            </p>
             
-            <p>We manage to control Sphero from LeapMotion</p>
+            <p>We manage to control Sphero from LeapMotion
+                Thank Python, we import Sphero libraries to the LeapMotion controller, we write some commands for connecting, and 'voila', we can controll Sphero from LeapMotion.
+                Now, we have to improve the control to make it more intuitive and smoother.
+            </p>
             
         </section>
     </div>
