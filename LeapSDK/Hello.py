@@ -8,7 +8,7 @@
 # between Leap Motion and you, your company or other organization.             #
 ################################################################################
 
-import Leap, sys, thread, time
+import Leap, sys, thread, time, math
 import spheroDriver, bluetooth
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
@@ -96,7 +96,8 @@ class SampleListener(Leap.Listener):
 
         else:
             deadzone = 35
-            speed = 100
+            oldSpeed = 0
+            oldAngle = 0
             if len(frame.hands) > 0:
                 hand = frame.hands[0]
                 if self.toSetUp:
@@ -114,61 +115,70 @@ class SampleListener(Leap.Listener):
                     # wait the next frame to get the base position of the hand
                     self.toSetUp = True
                     
+                xpos = hand.palm_position[0]-self.x
+                zpos = hand.palm_position[2]-self.z
+                speed = math.sqrt(xpos**2 + zpos**2) if speed > deadzone else 0
+                angle = math.degrees(math.atan(zpos / xpos))%360
+
+                if  not ((oldSpeed-5) < speed < (oldSpeed+5) and (oldAngle-5) < angle <(oldAngle+5)):
+                    self.s.roll(speed, angle, 1, False)
+                oldSpeed = speed
+                oldAngle = angle
                 #TODO: set the heading
                 #TODO: calc the angle between both positions and move in that way
                 #TODO2: move with hand angle
-                if (hand.palm_position[0] > self.x+deadzone) and (hand.palm_position[2] > self.z+deadzone):
-                    if self.lastCommand != 1:
-                        self.s.roll(speed, 135, 1, False)
-                        self.lastCommand = 1
-                        print "Go right/Down!!!!!!"
-                elif (hand.palm_position[0] > self.x+deadzone) and (hand.palm_position[2] < self.z-deadzone):
-                    if self.lastCommand != 2:
-                        self.s.roll(speed, 45, 1, False)
-                        self.lastCommand = 2
-                        print "Go right/Up!!!!!!"
-                elif (hand.palm_position[0] < self.x-deadzone) and (hand.palm_position[2] > self.z+deadzone):
-                    if self.lastCommand != 3:
-                        self.s.roll(speed, 225, 1, False)
-                        self.lastCommand = 3
-                        print "Go left/Down!!!!!!"
-                elif (hand.palm_position[0] < self.x-deadzone) and (hand.palm_position[2] < self.z-deadzone):
-                     if self.lastCommand != 4:
-                        self.s.roll(speed, 315, 1, False)
-                        self.lastCommand = 4
-                        print "Go left/Up!!!!!!"
+            #     if (hand.palm_position[0] > self.x+deadzone) and (hand.palm_position[2] > self.z+deadzone):
+            #         if self.lastCommand != 1:
+            #             self.s.roll(speed, 135, 1, False)
+            #             self.lastCommand = 1
+            #             print "Go right/Down!!!!!!"
+            #     elif (hand.palm_position[0] > self.x+deadzone) and (hand.palm_position[2] < self.z-deadzone):
+            #         if self.lastCommand != 2:
+            #             self.s.roll(speed, 45, 1, False)
+            #             self.lastCommand = 2
+            #             print "Go right/Up!!!!!!"
+            #     elif (hand.palm_position[0] < self.x-deadzone) and (hand.palm_position[2] > self.z+deadzone):
+            #         if self.lastCommand != 3:
+            #             self.s.roll(speed, 225, 1, False)
+            #             self.lastCommand = 3
+            #             print "Go left/Down!!!!!!"
+            #     elif (hand.palm_position[0] < self.x-deadzone) and (hand.palm_position[2] < self.z-deadzone):
+            #          if self.lastCommand != 4:
+            #             self.s.roll(speed, 315, 1, False)
+            #             self.lastCommand = 4
+            #             print "Go left/Up!!!!!!"
 
-                elif hand.palm_position[0] > self.x+deadzone:
-                    if self.lastCommand != 5:
-                        self.s.roll(speed, 90, 1, False)
-                        self.lastCommand = 5
-                        print "Go right!!!!!!"
-                elif hand.palm_position[0] < self.x-deadzone:
-                    if self.lastCommand != 6:
-                        self.s.roll(speed, 270, 1, False)
-                        self.lastCommand = 6
-                        print "Go left!!!!!!"
-                elif hand.palm_position[2] > self.z+deadzone:
-                    if self.lastCommand != 7: 
-                        self.s.roll(speed, 180, 1, False)
-                        self.lastCommand = 7
-                        print "Go down!!!!!!"
-                elif hand.palm_position[2] < self.z-deadzone:
-                    if self.lastCommand != 8:
-                        self.s.roll(speed, 0, 1, False)
-                        self.lastCommand = 8
-                        print "Go up!!!!!!"
-                else:
-                    if self.lastCommand != 0:
-                        self.s.roll(0, 0, 1, False)
-                        self.lastCommand = 0
-                        print "Stop!!!!!"
-            else:
-                if self.lastCommand != 0:
-                    self.s.roll(0, 0, 1, False)
-                    self.lastCommand = 0
-                    print "Stop!!!!!"
-                    self.change = True
+            #     elif hand.palm_position[0] > self.x+deadzone:
+            #         if self.lastCommand != 5:
+            #             self.s.roll(speed, 90, 1, False)
+            #             self.lastCommand = 5
+            #             print "Go right!!!!!!"
+            #     elif hand.palm_position[0] < self.x-deadzone:
+            #         if self.lastCommand != 6:
+            #             self.s.roll(speed, 270, 1, False)
+            #             self.lastCommand = 6
+            #             print "Go left!!!!!!"
+            #     elif hand.palm_position[2] > self.z+deadzone:
+            #         if self.lastCommand != 7: 
+            #             self.s.roll(speed, 180, 1, False)
+            #             self.lastCommand = 7
+            #             print "Go down!!!!!!"
+            #     elif hand.palm_position[2] < self.z-deadzone:
+            #         if self.lastCommand != 8:
+            #             self.s.roll(speed, 0, 1, False)
+            #             self.lastCommand = 8
+            #             print "Go up!!!!!!"
+            #     else:
+            #         if self.lastCommand != 0:
+            #             self.s.roll(0, 0, 1, False)
+            #             self.lastCommand = 0
+            #             print "Stop!!!!!"
+            # else:
+            #     if self.lastCommand != 0:
+            #         self.s.roll(0, 0, 1, False)
+            #         self.lastCommand = 0
+            #         print "Stop!!!!!"
+            #         self.change = True
 
 
 
