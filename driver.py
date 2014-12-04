@@ -815,6 +815,7 @@ class Sphero(threading.Thread):
 					data_length = ord(data[4])
 					if data_length+5 <= len(data):
 						data_packet = data[:(5+data_length)]
+						print data_packet
 						data = data[(5+data_length):]
 					else:
 						print "Response packet", self.data2hexstr(data[:(5+data_length)])	
@@ -914,5 +915,7 @@ class Sphero(threading.Thread):
 def prettyprint(thing):
 	length = ord(thing[4])
 	data = thing[5:length+5]
+	if len(data) == 0:
+		return
 	count = ord(data[-1])
 	print "%d - %s" % (count,''.join(data[:-1]))
