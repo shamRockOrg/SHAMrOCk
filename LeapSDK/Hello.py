@@ -79,10 +79,10 @@ class SampleListener(Leap.Listener):
             if (frame.id % 15 == 0): 
                 if circle.pointable.direction.angle_to(circle.normal) <= Leap.PI/2:
                     print "rotating clockwise"
-                    self.s.set_heading(20, False)
+                    self.s.set_heading(10, False)
                 else:
                     print "rotating counterclockwise"
-                    self.s.set_heading(340, False)
+                    self.s.set_heading(350, False)
 
     #                 # Calculate the angle swept since the last frame
     #                 swept_angle = 0
@@ -95,9 +95,10 @@ class SampleListener(Leap.Listener):
     #                         circle.progress, circle.radius, swept_angle * Leap.RAD_TO_DEG, clockwiseness)
 
         else:
-            deadzone = 35
-            oldSpeed = 0
-            oldAngle = 0
+            deadzone = 50
+            wiggleZone = 15.0
+            oldSpeed = 0.0
+            oldAngle = 0.0
             if len(frame.hands) > 0:
                 hand = frame.hands[0]
                 if self.toSetUp:
@@ -115,15 +116,30 @@ class SampleListener(Leap.Listener):
                     # wait the next frame to get the base position of the hand
                     self.toSetUp = True
                     
-                xpos = hand.palm_position[0]-self.x
-                zpos = hand.palm_position[2]-self.z
-                speed = math.sqrt(xpos**2 + zpos**2) if speed > deadzone else 0
-                angle = math.degrees(math.atan(zpos / xpos))%360
+                xpos = float(hand.palm_position[0]-self.x)
+                zpos = float(-(hand.palm_position[2]-self.z))
+                print xpos, zpos
+                speed = math.sqrt(xpos**2 + zpos**2) * 0.75
+                if speed < deadzone:
+                    speed = 0.0
+                if zpos == 0.0: zpos = 0.1
+                angle = (math.degrees(math.atan(xpos / zpos))) % 360
+                if  zpos < 0.0:
+                    if xpos < 0.0:
+                        angle = angle + 180.0
+                    else:
+                        angle = angle - 180.0
 
-                if  not ((oldSpeed-5) < speed < (oldSpeed+5) and (oldAngle-5) < angle <(oldAngle+5)):
-                    self.s.roll(speed, angle, 1, False)
+
+                if  not ((oldSpeed-wiggleZone) < speed < (oldSpeed+wiggleZone) and (oldAngle-wiggleZone) < angle <(oldAngle+wiggleZone)):
+                    self.s.roll(int(speed), int(angle), 1, False)
+                    print "angle %f" % (angle)
                 oldSpeed = speed
                 oldAngle = angle
+            else:
+                self.s.roll(0, 0, 1, False)
+                print "Stop!!!!!"
+                self.change = True
                 #TODO: set the heading
                 #TODO: calc the angle between both positions and move in that way
                 #TODO2: move with hand angle
