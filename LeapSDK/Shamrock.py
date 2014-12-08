@@ -9,8 +9,8 @@
 ################################################################################
 
 import Leap, sys, thread, time, math
-import spheroDriver, bluetooth
-from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
+import driver, bluetooth
+from Leap import CircleGesture
 
 
 CONST_DEADZONE = 40
@@ -37,7 +37,7 @@ class SampleListener(Leap.Listener):
 
     def on_init(self, controller):
         print "Initialized"
-        self.s = spheroDriver.Sphero()
+        self.s = driver.Sphero()
         try:
             self.s.connect()
             
@@ -53,7 +53,7 @@ class SampleListener(Leap.Listener):
                 time.sleep(5.0)
                 sys.exit(1)
 
-        self.s.set_back_led(255,False)
+        self.s.set_back_led(255)
 
 
     def on_connect(self, controller):
@@ -80,7 +80,7 @@ class SampleListener(Leap.Listener):
         if len(frame.gestures()) > 0 and self.isStop:
             circle = CircleGesture(frame.gestures()[0])
             if self.lastCommand != 0:
-                self.s.roll(0, 0, 1, False)
+                self.s.roll(0, 0, 1)
                 self.lastCommand = 0
                 
             # Determine clock direction using the angle between the pointable and the circle normal
@@ -88,23 +88,23 @@ class SampleListener(Leap.Listener):
                 if circle.pointable.direction.angle_to(circle.normal) <= Leap.PI/2:
                     print "rotating clockwise"
                     if self.version == 1:
-                        self.s.set_heading(10, False)
+                        self.s.set_heading(10)
                     else:
-                        self.s.roll(0, 10, 1, False)
-                        self.s.roll(0, 10, 1, False)
-                        self.s.roll(0, 10, 1, False)
-                        self.s.roll(0, 10, 1, False)
-                        self.s.set_heading(0, False)
+                        self.s.roll(0, 10, 1)
+                        self.s.roll(0, 10, 1)
+                        self.s.roll(0, 10, 1)
+                        self.s.roll(0, 10, 1)
+                        self.s.set_heading(0)
                 else:
                     print "rotating counterclockwise"
                     if self.version == 1:
-                        self.s.set_heading(350, False)
+                        self.s.set_heading(350)
                     else:
-                        self.s.roll(0, 350, 1, False)
-                        self.s.roll(0, 350, 1, False)
-                        self.s.roll(0, 350, 1, False)
-                        self.s.roll(0, 350, 1, False)
-                        self.s.set_heading(0, False)
+                        self.s.roll(0, 350, 1)
+                        self.s.roll(0, 350, 1)
+                        self.s.roll(0, 350, 1)
+                        self.s.roll(0, 350, 1)
+                        self.s.set_heading(0)
 
         else:
             if len(frame.hands) > 0:
@@ -149,13 +149,13 @@ class SampleListener(Leap.Listener):
                     if self.version == 1:
                         if not self.inside_deadzone(speed, angle): #value has changed, this is not to calc if it is inside deadzone
                             # all good
-                            self.s.roll(int(speed * CONST_SPEEDFACTOR), int(angle), 1, False)
+                            self.s.roll(int(speed * CONST_SPEEDFACTOR), int(angle), 1)
                             self.isStop = False
                             print "angle: %f and speed %f" % (angle, speed)
                             self.oldSpeed = speed
                             self.oldAngle = angle
                     else:
-                        self.s.roll(int(speed * CONST_SPEEDFACTOR), int(angle), 1, False)
+                        self.s.roll(int(speed * CONST_SPEEDFACTOR), int(angle), 1)
                         self.isStop = False
                         print "angle: %f and speed %f" % (angle, speed)
                         self.oldSpeed = speed
@@ -163,7 +163,7 @@ class SampleListener(Leap.Listener):
                 else:
                     #inside the deadzone
                     if not self.isStop:
-                        self.s.roll(0, 0, 1, False)
+                        self.s.roll(0, 0, 1)
                         self.isStop = True
                         print "Stop!!!!!"
                         
@@ -171,7 +171,7 @@ class SampleListener(Leap.Listener):
             else:
                 # Look, no hands!
                 if not self.isStop:
-                    self.s.roll(0, 0, 1, False)
+                    self.s.roll(0, 0, 1)
                     self.isStop = True
                     print "Stop!!!!!"
                     self.change = True
