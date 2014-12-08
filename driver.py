@@ -184,8 +184,8 @@ class BTInterface(object):
 					#look for a device name that starts with Sphero
 					if name.startswith(self.target_name):
 						self.found_device = True
-						devices += (bdaddr,name)
-						sys.stdout.write("\n%d: \"%s\"" % (index,name)
+						devices.append((bdaddr,name))
+						sys.stdout.write("\n%d: \"%s\" (%s)" % (index,name,bdaddr))
 						index +=1
 			if self.found_device:
 				i = int(raw_input("\nconnect to: "))
