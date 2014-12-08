@@ -133,7 +133,7 @@ class SampleListener(Leap.Listener):
                 # length of polar vector
                 speed = math.sqrt(xpos**2 + zpos**2)
                 if speed > CONST_DEADZONE:
-                    #inside deadzone
+                    #outside deadzone
                     if zpos == 0.0:
                         # Fix division by 0
                         zpos = 0.1
