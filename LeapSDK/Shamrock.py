@@ -32,6 +32,7 @@ class SampleListener(Leap.Listener):
     oldSpeed = 0.0
     oldAngle = 0.0
     isStop = False
+    version = 2
 
 
     def on_init(self, controller):
@@ -76,7 +77,7 @@ class SampleListener(Leap.Listener):
         frame = controller.frame()
 
         #we only have circule gestures
-        if len(frame.gestures()) > 0:
+        if len(frame.gestures()) > 0 and self.isStop:
             circle = CircleGesture(frame.gestures()[0])
             if self.lastCommand != 0:
                 self.s.roll(0, 0, 1, False)
@@ -86,10 +87,25 @@ class SampleListener(Leap.Listener):
             if (frame.id % 15 == 0): 
                 if circle.pointable.direction.angle_to(circle.normal) <= Leap.PI/2:
                     print "rotating clockwise"
-                    self.s.set_heading(10, False)
+                    if self.version == 1:
+                        self.s.set_heading(10, False)
+                    else:
+                        self.s.roll(0, 10, 1, False)
+                        self.s.roll(0, 10, 1, False)
+                        self.s.roll(0, 10, 1, False)
+                        self.s.roll(0, 10, 1, False)
+                        self.s.set_heading(0, False)
                 else:
                     print "rotating counterclockwise"
-                    self.s.set_heading(350, False)
+                    if self.version == 1:
+                        self.s.set_heading(350, False)
+                    else:
+                        self.s.roll(0, 350, 1, False)
+                        self.s.roll(0, 350, 1, False)
+                        self.s.roll(0, 350, 1, False)
+                        self.s.roll(0, 350, 1, False)
+                        self.s.set_heading(0, False)
+
         else:
             if len(frame.hands) > 0:
                 hand = frame.hands[0]
@@ -130,15 +146,22 @@ class SampleListener(Leap.Listener):
                             angle = angle + 180.0
                         else:
                             angle = angle - 180.0
-
-                    if not self.inside_deadzone(speed, angle): #value has changed, not inside deadzone
-                        # all good
+                    if self.version == 1:
+                        if not self.inside_deadzone(speed, angle): #value has changed, this is not to calc if it is inside deadzone
+                            # all good
+                            self.s.roll(int(speed * CONST_SPEEDFACTOR), int(angle), 1, False)
+                            self.isStop = False
+                            print "angle: %f and speed %f" % (angle, speed)
+                            self.oldSpeed = speed
+                            self.oldAngle = angle
+                    else:
                         self.s.roll(int(speed * CONST_SPEEDFACTOR), int(angle), 1, False)
                         self.isStop = False
                         print "angle: %f and speed %f" % (angle, speed)
                         self.oldSpeed = speed
                         self.oldAngle = angle
                 else:
+                    #inside the deadzone
                     if not self.isStop:
                         self.s.roll(0, 0, 1, False)
                         self.isStop = True
