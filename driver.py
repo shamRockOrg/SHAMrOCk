@@ -177,17 +177,20 @@ class BTInterface(object):
 			sys.stdout.write("....")
 			sys.stdout.flush()
 			nearby_devices = bluetooth.discover_devices(lookup_names = True)
-
+			devices = []
 			if len(nearby_devices)>0:
+				index = 0
 				for bdaddr, name in nearby_devices:
 					#look for a device name that starts with Sphero
 					if name.startswith(self.target_name):
 						self.found_device = True
-						self.target_address = bdaddr
-						break
+						thing = (bdaddr,name)
+						sys.stdout.write("\n%d: %s (\"%s\")" % (index,thing))
+						index +=1
 			if self.found_device:
+				i = int(raw_input("\nconnect to: "))
+				self.target_address = devices[i][0]
 				break
-
 
 		if self.target_address is not None:
 			sys.stdout.write("\nFound Sphero device with address: %s\n" %  (self.target_address))
@@ -199,7 +202,7 @@ class BTInterface(object):
 
 		try:
 			self.sock=bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-			self.sock.connect((bdaddr,self.port))
+			self.sock.connect((self.target_address,self.port))
 		except bluetooth.btcommon.BluetoothError as error:
 			sys.stdout.write("Bluetooth error:"+error)
 			sys.stdout.flush()
