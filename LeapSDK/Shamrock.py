@@ -54,6 +54,7 @@ class SampleListener(Leap.Listener):
                 sys.exit(1)
 
         self.s.set_back_led(255)
+        self.s.set_rgb_led(0,0,0,0)
 
 
     def on_connect(self, controller):
@@ -80,7 +81,7 @@ class SampleListener(Leap.Listener):
         if len(frame.gestures()) > 0 and self.isStop:
             circle = CircleGesture(frame.gestures()[0])
             if self.lastCommand != 0:
-                self.s.roll(0, 0, 1)
+                self.rollAndColor(0, 0, 1)
                 self.lastCommand = 0
                 
             # Determine clock direction using the angle between the pointable and the circle normal
@@ -90,20 +91,20 @@ class SampleListener(Leap.Listener):
                     if self.version == 1:
                         self.s.set_heading(10)
                     else:
-                        self.s.roll(0, 10, 1)
-                        self.s.roll(0, 10, 1)
-                        self.s.roll(0, 10, 1)
-                        self.s.roll(0, 10, 1)
+                        self.rollAndColor(0, 10, 1)
+                        self.rollAndColor(0, 10, 1)
+                        self.rollAndColor(0, 10, 1)
+                        self.rollAndColor(0, 10, 1)
                         self.s.set_heading(0)
                 else:
                     print "rotating counterclockwise"
                     if self.version == 1:
                         self.s.set_heading(350)
                     else:
-                        self.s.roll(0, 350, 1)
-                        self.s.roll(0, 350, 1)
-                        self.s.roll(0, 350, 1)
-                        self.s.roll(0, 350, 1)
+                        self.rollAndColor(0, 350, 1)
+                        self.rollAndColor(0, 350, 1)
+                        self.rollAndColor(0, 350, 1)
+                        self.rollAndColor(0, 350, 1)
                         self.s.set_heading(0)
 
         else:
@@ -149,13 +150,13 @@ class SampleListener(Leap.Listener):
                     if self.version == 1:
                         if not self.inside_deadzone(speed, angle): #value has changed, this is not to calc if it is inside deadzone
                             # all good
-                            self.s.roll(int(speed * CONST_SPEEDFACTOR), int(angle), 1)
+                            self.rollAndColor(int(speed * CONST_SPEEDFACTOR), int(angle), 1)
                             self.isStop = False
                             print "angle: %f and speed %f" % (angle, speed)
                             self.oldSpeed = speed
                             self.oldAngle = angle
                     else:
-                        self.s.roll(int(speed * CONST_SPEEDFACTOR), int(angle), 1)
+                        self.rollAndColor(int(speed * CONST_SPEEDFACTOR), int(angle), 1)
                         self.isStop = False
                         print "angle: %f and speed %f" % (angle, speed)
                         self.oldSpeed = speed
@@ -163,7 +164,7 @@ class SampleListener(Leap.Listener):
                 else:
                     #inside the deadzone
                     if not self.isStop:
-                        self.s.roll(0, 0, 1)
+                        self.rollAndColor(0, 0, 1)
                         self.isStop = True
                         print "Stop!!!!!"
                         
@@ -171,7 +172,7 @@ class SampleListener(Leap.Listener):
             else:
                 # Look, no hands!
                 if not self.isStop:
-                    self.s.roll(0, 0, 1)
+                    self.rollAndColor(0, 0, 1)
                     self.isStop = True
                     print "Stop!!!!!"
                     self.change = True
@@ -195,6 +196,16 @@ class SampleListener(Leap.Listener):
         lowerAngle = self.oldAngle-CONST_DELTA
         upperAngle = self.oldAngle+CONST_DELTA
         return lowerSpeed < speed < upperSpeed and lowerAngle < angle < upperAngle
+
+    def rollAndColor(self,speed,angle,mode):
+        # 0 speed -> blue
+        # gradient between
+        # full speed -> red
+        red = int((speed*1.5+50)%255)
+        blue = int((-speed%255+200)%255)
+        print "red %d,      blue %d" %(red,blue)
+        self.s.set_rgb_led(red,0,blue,0)
+        self.s.roll(speed,angle,mode)
 
 def main():
     # Create a sample listener and controller
