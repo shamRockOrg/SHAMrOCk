@@ -1,3 +1,5 @@
+#Initialize Sphero
+
 from driver import Sphero
 s = Sphero()
 try:

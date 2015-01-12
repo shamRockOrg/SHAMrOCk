@@ -1,4 +1,3 @@
-#import C:\Pervasive Computing\LeapSDK\lib\Leap
 
 ################################################################################
 # Copyright (C) 2012-2013 Leap Motion, Inc. All rights reserved.               #
@@ -8,33 +7,35 @@
 # between Leap Motion and you, your company or other organization.             #
 ################################################################################
 
+###############################################################################
+# Created a LeapMotion driver based on the developer's driver                 #
+# in order to control Sphero through its driver (used unofficial driver)      #
+###############################################################################
+
+
 import Leap, sys, thread, time, math
 import driver, bluetooth
 from Leap import CircleGesture
 
 
-CONST_DEADZONE = 40
-CONST_DELTA = 15.0
-CONST_SPEEDFACTOR = 0.75
-SPHEROVERSION = ""
+CONST_DEADZONE = 40 #Radius in mm from the center point where the ball will not move
+CONST_DELTA = 15.0  #If the hand position changes more than CONST_DELTA (mm). A different command will be send.
+                    #This avoids that small shakes of our hand modify unintentionally direction.
+CONST_SPEEDFACTOR = 0.75  #Final speed will be multiplied
+#SPHEROVERSION = ""
 
 class SampleListener(Leap.Listener):
-    finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
-    bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
-    myList=[0,0,0,0,0]
-    average = 0
-    i = 0
-    change = True
-    x,z = 0,0
+    change = True   #If the speed or direction has changed
+    x,z = 0,0   #Center position
     lastCommand = 0
     toSetUp = False
     oldSpeed = 0.0
     oldAngle = 0.0
     isStop = False
-    version = 2
+    version = 2     #Sphero version
 
-
+    #Initialize Sphero
     def on_init(self, controller):
         print "Initialized"
         self.s = driver.Sphero()
@@ -73,11 +74,12 @@ class SampleListener(Leap.Listener):
     def on_exit(self, controller):
         print "Exited"
 
+    #Every frame executes:
     def on_frame(self, controller):
         # Get the most recent frame and report some basic information
         frame = controller.frame()
 
-        #we only have circule gestures
+        #we only have circule gestures to set the heading
         if len(frame.gestures()) > 0 and self.isStop:
             circle = CircleGesture(frame.gestures()[0])
             if self.lastCommand != 0:
@@ -105,12 +107,14 @@ class SampleListener(Leap.Listener):
                         self.rollAndColor(0, 350, 1)
                         self.rollAndColor(0, 350, 1)
                         self.rollAndColor(0, 350, 1)
+        
                         self.s.set_heading(0)
-
+        #If there is not any gesture
         else:
             if len(frame.hands) > 0:
                 hand = frame.hands[0]
                 
+                #We set the hand center position when we press enter
                 if self.toSetUp:
                     # set origo
                     self.x = hand.palm_position[0]
@@ -128,6 +132,7 @@ class SampleListener(Leap.Listener):
                     # wait the next frame to get the base position of the hand
                     self.toSetUp = True
                 
+                #Coordinate of our hand with the center position
                 xpos = float(  hand.palm_position[0]-self.x)
                 zpos = float(-(hand.palm_position[2]-self.z))
 

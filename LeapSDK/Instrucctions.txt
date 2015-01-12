@@ -1,4 +1,0 @@
-You have to put the file in the lib folder
-You have to copy the files from x86 folder to lib folder
-
-HelloV2 is for sphero 2.0

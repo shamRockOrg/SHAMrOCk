@@ -30,6 +30,14 @@
 #*  POSSIBILITY OF SUCH DAMAGE.
 #***********************************************************
 #author: Melonee Wise
+#modified by Emil Tylén, Timothée Germain, Hector Anadon Leon, Haomeng Chen
+
+
+
+########################################################
+# Unofficial driver of Sphere modified by us in order  #
+# to have a LeapMotion as a controller                 #
+########################################################
 
 import bluetooth
 import sys
